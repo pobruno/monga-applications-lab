@@ -2,7 +2,7 @@
 variable "resource_group_name" {
     type = map(string)
   default = {
-    "name"          = "RG-ENVMG"
+    "name"          = "ENVMG"
     "location"      = "brazilsouth"
     "storage"       = "mgappstorage"
  }
