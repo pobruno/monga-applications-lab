@@ -16,5 +16,5 @@ jobs:
         username: ${{secrets.USERNAME}}
         password: ${{secrets.PASSWORD}}
         port: ${{secrets.PORT}}
-        script: git clone https://github.com/BrunoPolezaGomes/monga-applications-lab.git
+        script: rm -rf monga-applications-lab && git clone https://github.com/BrunoPolezaGomes/monga-applications-lab.git && sudo python3 monga-applications-lab/app.py
 
