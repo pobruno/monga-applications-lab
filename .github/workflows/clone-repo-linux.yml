@@ -16,5 +16,6 @@ jobs:
         username: ${{secrets.USERNAME}}
         password: ${{secrets.PASSWORD}}
         port: ${{secrets.PORT}}
-        script: sudo pkill -f app.py && rm -rf monga-applications-lab && git clone https://github.com/BrunoPolezaGomes/monga-applications-lab.git && sudo python3 monga-applications-lab/app.py
+        script: git pull https://github.com/BrunoPolezaGomes/monga-applications-lab.git
 
+#script: sudo pkill -f app.py && rm -rf monga-applications-lab && git pull https://github.com/BrunoPolezaGomes/monga-applications-lab.git && sudo python3 monga-applications-lab/app.py
