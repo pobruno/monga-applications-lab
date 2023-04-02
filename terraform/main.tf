@@ -1,40 +1,35 @@
 
-
 terraform {
-  required_version = ">=1.0"
-
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~>3.0"
+      version = "=3.0.0"
     }
   }
 }
 
+# Configure the Microsoft Azure Provider
 provider "azurerm" {
   features {}
 }
 
 resource "random_string" "int" {
-    length  = 2
-    upper   = false
-    lower   = false
-    number  = true
-    special = false
+  length  = 2
+  upper   = false
+  lower   = false
+  number  = true
+  special = false
 }
 
+## Create the Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = "RG-${var.resource_group_name["name"]}"
   location = var.resource_group_name["location"]
   tags     = var.tags
 }
 
-# Create virtual network
-resource "azurerm_virtual_network" "my_terraform_network" {
+## Create the Resource VNet
+resource "azurerm_virtual_network" "vnet" {
   name                = "vNET-${var.resource_group_name["name"]}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -42,16 +37,64 @@ resource "azurerm_virtual_network" "my_terraform_network" {
   tags                = var.tags
 }
 
-# Create subnet
-resource "azurerm_subnet" "my_terraform_subnet" {
+## Create the Resource SubNet
+resource "azurerm_subnet" "subnet" {
   name                 = "sNet-Local"
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.my_terraform_network.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
-# Create public IPs
-resource "azurerm_public_ip" "my_terraform_public_ip" {
+## Create the Resource SNG
+resource "azurerm_network_security_group" "nsg" {
+  name                = "NSG-${var.resource_group_name["name"]}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags                = var.tags
+}
+
+## Create the Resource Network Rules
+resource "azurerm_network_security_rule" "rules" {
+  for_each                    = local.nsgrules 
+  name                        = each.key
+  direction                   = each.value.direction
+  access                      = each.value.access
+  priority                    = each.value.priority
+  protocol                    = each.value.protocol
+  source_port_range           = each.value.source_port_range
+  destination_port_range      = each.value.destination_port_range
+  source_address_prefix       = each.value.source_address_prefix
+  destination_address_prefix  = each.value.destination_address_prefix
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.nsg.name
+}
+
+## Create the Resource Storage Account
+resource "azurerm_storage_account" "storage_account" {
+  name                      = var.VirtualMachine["admin_username"]
+  resource_group_name       = azurerm_resource_group.rg.name
+  location                  = azurerm_resource_group.rg.location
+  account_tier              = "Standard"
+  account_replication_type  = "LRS"
+  tags                      = var.tags
+}
+
+## Create the Resource Storage Container
+resource "azurerm_storage_container" "storage_container" {
+  name                  = "storage-${var.VirtualMachine["admin_username"]}"
+  storage_account_name  = azurerm_storage_account.storage_account.name
+  container_access_type = "private"
+}
+
+## Associate VM NSG with the subnet
+resource "azurerm_subnet_network_security_group_association" "VM-nsg-association" {
+  depends_on=[azurerm_resource_group.rg]
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+## Get a Static Public IP
+resource "azurerm_public_ip" "VM-ip" {
   depends_on=[azurerm_resource_group.rg] 
   name                = "IP${random_string.int.result}-${var.VirtualMachine["VM_Name"]}"
   location            = azurerm_resource_group.rg.location
@@ -60,38 +103,8 @@ resource "azurerm_public_ip" "my_terraform_public_ip" {
   tags                = var.tags
 }
 
-# Create Network Security Group and rules
-resource "azurerm_network_security_group" "my_terraform_nsg" {
-  name                = "NSG-${var.resource_group_name["name"]}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags                = var.tags
-  security_rule {
-    name                       = "RDP"
-    priority                   = 1000
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "3389"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  security_rule {
-    name                       = "web"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
-
-# Create network interface
-resource "azurerm_network_interface" "my_terraform_nic" {
+## Create Network Card for linux VM
+resource "azurerm_network_interface" "VM-nic" {
   depends_on = [azurerm_resource_group.rg]
   name                = "NIC${random_string.int.result}-${var.VirtualMachine["VM_Name"]}"
   location            = azurerm_resource_group.rg.location
@@ -99,54 +112,43 @@ resource "azurerm_network_interface" "my_terraform_nic" {
   tags                = var.tags
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.my_terraform_subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.my_terraform_public_ip.id
+    subnet_id                     = azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Static"
+    public_ip_address_id          = azurerm_public_ip.VM-ip.id
   }
 }
 
-# Connect the security group to the network interface
-resource "azurerm_network_interface_security_group_association" "example" {
-  network_interface_id      = azurerm_network_interface.my_terraform_nic.id
-  network_security_group_id = azurerm_network_security_group.my_terraform_nsg.id
-}
+  ##########################################
+  # Create Linux Virtual Machine MGAPP-LAB #
+  ##########################################
+resource "azurerm_virtual_machine" "VM" {
+  depends_on=[azurerm_network_interface.VM-nic]
 
-# Create storage account for boot diagnostics
-resource "azurerm_storage_account" "my_storage_account" {
-  name                      = var.resource_group_name["storage"]
-  resource_group_name       = azurerm_resource_group.rg.name
-  location                  = azurerm_resource_group.rg.location
-  account_tier              = "Standard"
-  account_replication_type  = "LRS"
-  tags                      = var.tags
-}
-
-
-# Create virtual machine
-resource "azurerm_windows_virtual_machine" "main" {
-  name                  = var.VirtualMachine["VM_Name"]
-  admin_username        = var.VirtualMachine["admin_username"]
-  admin_password        = var.VirtualMachine["admin_password"]
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
-  size                  = var.VirtualMachine["size"]
-
-  os_disk {
-    name                    = "DISK-${random_string.int.result}${var.VirtualMachine["VM_Name"]}"
-    caching                 = "ReadWrite"
-    storage_account_type    = "Standard_LRS"
-  }
-
-  source_image_reference {
+  name                  = var.VirtualMachine["VM_Name"]
+  network_interface_ids = [azurerm_network_interface.VM-nic.id]
+  vm_size               = var.VirtualMachine["size"]
+  tags                  = var.tags 
+  storage_image_reference {
     publisher = var.VirtualMachine["publisher"]
     offer     = var.VirtualMachine["offer"]
-    sku       = var.VirtualMachine["sku"]
+    sku       = var.VirtualMachine["sku"]    
     version   = var.VirtualMachine["version"]
   }
-
-
-  boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.my_storage_account.primary_blob_endpoint
+  storage_os_disk {
+    name          = "DISK${random_string.int.result}-${var.VirtualMachine["VM_Name"]}"
+    vhd_uri       = "${azurerm_storage_account.storage_account.primary_blob_endpoint}${azurerm_storage_container.storage_container.name}/DISK${random_string.int.result}-${var.VirtualMachine["VM_Name"]}.vhd"
+    caching       = "ReadWrite"
+    create_option = "FromImage"
+  }
+  os_profile {
+    computer_name  = var.VirtualMachine["VM_Name"]
+    admin_username = var.VirtualMachine["admin_username"]
+    admin_password = var.VirtualMachine["admin_password"]
+  }
+  os_profile_linux_config {
+    disable_password_authentication = false
   }
 }
+
