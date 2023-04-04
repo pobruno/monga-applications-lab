@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
+import config
 import openai
-
 
 app = Flask(__name__)
 # config.py config.DevelopmentConfig.OPENAI_KEY
@@ -15,7 +15,6 @@ def chat():
     # Obtém a mensagem do cliente do corpo da solicitação
     data = request.json
     prompt = data['prompt']
-
     # Chama o modelo ChatGPT da OpenAI para gerar uma resposta
     response = openai.Completion.create(
         engine="text-davinci-002",
@@ -25,7 +24,6 @@ def chat():
         stop=None,
         temperature=0.7,
     )
-
     # Obtém a resposta gerada pelo modelo e retorna ao cliente
     message = response.choices[0].text.strip()
     return jsonify({'message': message})
