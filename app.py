@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import config
 import requests
 import openai
@@ -7,29 +8,7 @@ import openai
 openai.api_key = config.DevelopmentConfig.OPENAI_KEY
 
 app = Flask(__name__)
-
-#@app.route('/')
-#def hello_world():
-#    return 'Hello World! V1.0.2'
-
-#@app.route('/api/v1/message', methods=['POST'])
-#def message():
-#    # Obtém a mensagem do cliente do corpo da solicitação
-#    data = request.json
-#    prompt = data['prompt']
-#    # Chama o modelo ChatGPT da OpenAI para gerar uma resposta
-#    response = openai.ChatCompletion.create(
-#        model="gpt-3.5-turbo",
-#        messages=[
-#            {"role": "system", "content": "You are a helpful assistant."},
-#            {"role": "user", "content": prompt}
-#        ]
-#    )
-#    # Obtém a resposta gerada pelo modelo e retorna ao cliente
-#    message = response.choices[0].text.strip()
-#    return jsonify({'message': message})
-
-
+CORS(app)
 
 # Define the API endpoint
 @app.route('/api/v1/message', methods=['POST'])
@@ -67,3 +46,23 @@ if __name__ == '__main__':
 #)
 #message = response.choices[0].message.content.strip()
 
+# @app.route('/')
+# def hello_world():
+#    return 'Hello World! V1.0.2'
+
+# @app.route('/api/v1/message', methods=['POST'])
+# def message():
+#    # Obtém a mensagem do cliente do corpo da solicitação
+#    data = request.json
+#    prompt = data['prompt']
+#    # Chama o modelo ChatGPT da OpenAI para gerar uma resposta
+#    response = openai.ChatCompletion.create(
+#        model="gpt-3.5-turbo",
+#        messages=[
+#            {"role": "system", "content": "You are a helpful assistant."},
+#            {"role": "user", "content": prompt}
+#        ]
+#    )
+#    # Obtém a resposta gerada pelo modelo e retorna ao cliente
+#    message = response.choices[0].text.strip()
+#    return jsonify({'message': message})
