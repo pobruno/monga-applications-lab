@@ -1,3 +1,8 @@
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  
+  DISCORD_API_KEY: ${{ secrets.DISCORD_API_KEY }}
+  DISCORD_CHANNEL: ${{ secrets.DISCORD_CHANNEL }}
+
 name: Remote SSH Linux Clone-Repo
 on:
   push:
@@ -19,4 +24,21 @@ jobs:
         script_stop: true
         all_envs: true 
         script: |
+          printenv
           cd /home/monga/monga-applications-lab && git pull --force
+  
+  another_job:
+    name: another_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          all_envs: true    
+          script: |
+           printenv
