@@ -17,6 +17,6 @@ jobs:
         password: ${{secrets.PASSWORD}}
         port: ${{secrets.PORT}}
         script: |
-          cd /home/monga/monga-applications-lab && git pull
+          cd /home/monga/monga-applications-lab && git pull --force
 
 

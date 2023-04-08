@@ -47,7 +47,7 @@ def message():
 
 # Versoin v4
 @app.route('/api/v4/message', methods=['POST'])
-def message():
+def text():
    data = request.get_json()
    prompt = data['prompt']
    response = openai.ChatCompletion.create(
