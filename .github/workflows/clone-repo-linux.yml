@@ -41,4 +41,7 @@ jobs:
           script_stop: true
           all_envs: true    
           script: |
-           printenv
+            echo OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} >> .env
+            echo DISCORD_API_KEY=${{ secrets.DISCORD_API_KEY }} >> .env
+            echo DISCORD_CHANNEL=${{ secrets.DISCORD_CHANNEL }} >> .env
+            printenv
