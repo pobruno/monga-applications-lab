@@ -16,10 +16,7 @@ jobs:
         username: ${{secrets.USERNAME}}
         password: ${{secrets.PASSWORD}}
         port: ${{secrets.PORT}}
-        script: sudo sh /home/monga/clone-repo.sh
-
-# sudo nohup python3 -u /home/monga/monga-applications-lab/app.py
-#script: sudo kill -9 `sudo lsof -t -i:80` && rm -rf monga-applications-lab && git pull https://github.com/BrunoPolezaGomes/monga-applications-lab.git && sudo python3 monga-applications-lab/app.py
-
+        script: |
+          cd /home/monga/monga-applications-lab && git pull
 
 
