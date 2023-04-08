@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, render_template, url_for
 from flask_cors import CORS
 import config
 import requests
@@ -8,10 +8,41 @@ import os
 
 load_dotenv()
 
-openai.api_key = os.getenv('OPENAI_KEY')
-
 app = Flask(__name__)
 CORS(app)
+openai.api_key = os.getenv('OPENAI_KEY')
+
+
+@app.route("/", methods=("GET", "POST"))
+def index():
+    if request.method == "POST":
+        question = request.form["question"]
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=question,
+            temperature=0.6,
+        )
+        return redirect(url_for("index", result=response.choices[0].text))
+
+    result = request.args.get("result")
+    return render_template("index.html", result=result)
+
+
+@app.route("/image", methods=("GET", "POST"))
+def image():
+    if request.method == "POST":
+        image = request.form["image"]
+        response = openai.Image.create(
+            prompt=image,
+            n=1,
+            size="1024x1024"
+        )
+        return redirect(url_for("image", result=response['data'][0]['url']))
+
+    result = request.args.get("result")
+    return render_template("image.html", result=result)
+
+
 
 ## Define the API endpoint
 # Version v2
@@ -45,25 +76,6 @@ def message():
    message = response.choices[0].text.strip()
    return jsonify({'message': message})
 
-# Versoin v4
-@app.route('/api/v4/message', methods=['POST'])
-def text():
-   data = request.get_json()
-   prompt = data['prompt']
-   response = openai.ChatCompletion.create(
-       model="text-davinci-002",
-       messages=[
-           {"role": "system", "content": "You are a helpful assistant."},
-           {"role": "user", "content": prompt}
-       ]
-   )
-   message = response.choices[0].message.content.strip()
-   return jsonify({'message': message})
-
-# Version v5
-@app.route('/')
-def hello_world():
-    return 'Hello World! V1.0.2'
 
 
 # Start the Flask app
