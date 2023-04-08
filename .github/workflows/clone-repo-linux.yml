@@ -6,17 +6,17 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Buil
     runs-on: ubuntu-latest
     steps:
     - name: executing remote ssh commands using password
-      uses: appleboy/ssh-action@v0.1.8
+      uses: appleboy/ssh-action@master
       with:
         host: ${{secrets.HOST}}
         username: ${{secrets.USERNAME}}
         password: ${{secrets.PASSWORD}}
         port: ${{secrets.PORT}}
+        script_stop: true
+        all_envs: true 
         script: |
           cd /home/monga/monga-applications-lab && git pull --force
-
-
