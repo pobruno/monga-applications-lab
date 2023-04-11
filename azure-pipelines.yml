@@ -9,9 +9,17 @@ trigger:
 pool: USLINUX01
 
 steps:
-- task: JenkinsQueueJob@2
+
+- task: UsePythonVersion@0
   inputs:
-    jobName: 
-    captureConsole: true
-    capturePipeline: true
-    isParameterizedJob: false
+    versionSpec: '3.x'
+    addToPath: true
+    architecture: 'x64'
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      sudo apt update && sudo apt upgrade
+      echo Install packages
+      sudo apt install python3-pip -y
+      sudo apt install dotenv -y
