@@ -8,18 +8,30 @@ trigger:
 
 pool: USLINUX01
 
-steps:
+strategy:
+  matrix:
+    Python37:
+      python.version: '3.7'
+    Python38:
+      python.version: '3.8'
+    Python39:
+      python.version: '3.9'
+    Python310:
+      python.version: '3.10'
 
-- task: CmdLine@2
+steps:
+- task: UsePythonVersion@0
   inputs:
-    script: |
-      sudo apt update && sudo apt upgrade
-      echo Install packages
-      sudo apt install python3-pip -y
-      sudo apt install dotenv -y
-      sudo pip3 install virtualenv -y
-      sudo pip3 install dotenv -y
-      sudo pip3 install flask  -y
-      sudo pip3 install openai -y
-      sudo pip3 install python-dotenv -y
-      sudo pip3 install requests -y
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+    pip install pytest pytest-azurepipelines
+    pytest
+  displayName: 'pytest'
+
