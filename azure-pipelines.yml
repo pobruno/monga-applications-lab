@@ -15,7 +15,3 @@ steps:
     captureConsole: true
     capturePipeline: true
     isParameterizedJob: false
-
-- task: Maven@3
-  inputs:
-    publishJUnitResults: true
