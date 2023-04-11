@@ -23,3 +23,9 @@ steps:
       echo Install packages
       sudo apt install python3-pip -y
       sudo apt install dotenv -y
+      sudo pip3 install virtualenv -y
+      sudo pip3 install dotenv -y
+      sudo pip3 install flask  -y
+      sudo pip3 install openai -y
+      sudo pip3 install python-dotenv -y
+      sudo pip3 install requests -y
