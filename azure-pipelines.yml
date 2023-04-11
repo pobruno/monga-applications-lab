@@ -9,7 +9,13 @@ trigger:
 pool: USLINUX01
 
 steps:
+- task: JenkinsQueueJob@2
+  inputs:
+    jobName: 
+    captureConsole: true
+    capturePipeline: true
+    isParameterizedJob: false
+
 - task: Maven@3
   inputs:
-    mavenPomFile: 'app.py'
     publishJUnitResults: true
