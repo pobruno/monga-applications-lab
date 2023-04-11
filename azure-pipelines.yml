@@ -26,8 +26,12 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
+    git pull git@ssh.dev.azure.com:v3/mongadev/aiMonga-GPT/app-aimonga-gpt
+  displayName: 'Repos Pull'
+
+- script: |
     python -m pip install --upgrade pip
-    pip install -r requirements.txt
+    pip install -r ./home/monga/app-aimonga-gpt/requirements.txt
   displayName: 'Install dependencies'
 
 - script: |
